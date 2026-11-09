@@ -4,7 +4,7 @@
 parallel = true
 
 [pre-commit.commands]
-format = { glob = "*.rs", run = "rustfmt {staged_files}" }
+format = { glob = "*.rs", run = "rustfmt {staged_files}", stage_fixed = true }
 
 [pre-push]
 parallel = true

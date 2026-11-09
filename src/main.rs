@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 struct Model {
     texture: Option<Handle<Image>>,
+    texture_size: Option<Vec2>,
     texture_path: Option<PathBuf>,
     texture_error: Option<String>,
     file_dialog_task: Option<Task<Option<PathBuf>>>,
@@ -23,6 +24,7 @@ fn model(app: &App) -> Model {
 
     Model {
         texture: None,
+        texture_size: None,
         texture_path: None,
         texture_error: None,
         file_dialog_task: None,
@@ -40,8 +42,9 @@ fn update(app: &App, model: &mut Model) {
 
         if let Some(path) = selected_path {
             match load_texture(app, &path) {
-                Ok(texture) => {
+                Ok((texture, texture_size)) => {
                     model.texture = Some(texture);
+                    model.texture_size = Some(texture_size);
                     model.texture_path = Some(path);
                     model.texture_error = None;
                 }
@@ -95,7 +98,7 @@ fn update(app: &App, model: &mut Model) {
     });
 }
 
-fn load_texture(app: &App, path: &std::path::Path) -> Result<Handle<Image>, String> {
+fn load_texture(app: &App, path: &std::path::Path) -> Result<(Handle<Image>, Vec2), String> {
     let bytes = std::fs::read(path).map_err(|error| error.to_string())?;
     let extension = path
         .extension()
@@ -111,11 +114,23 @@ fn load_texture(app: &App, path: &std::path::Path) -> Result<Handle<Image>, Stri
     )
     .map_err(|error| error.to_string())?;
 
-    Ok(app.asset_server().add(image))
+    let size = vec2(image.width() as f32, image.height() as f32);
+    Ok((app.asset_server().add(image), size))
 }
 
-fn view(app: &App, _model: &Model) {
+fn view(app: &App, model: &Model) {
     let draw = app.draw();
 
     draw.background().color(WHITE);
+
+    if let Some(texture) = &model.texture
+        && let Some(size) = model.texture_size
+    {
+        let max_width = 1000.0;
+        let max_height = 700.0;
+        let scale = (max_width / size.x).min(max_height / size.y);
+        draw.rect()
+            .w_h(size.x * scale, size.y * scale)
+            .texture(texture);
+    }
 }
