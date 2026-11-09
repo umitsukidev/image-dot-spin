@@ -1,0 +1,7 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+[tools]
+lefthook = "latest"
+
+[hooks]
+postinstall = "lefthook install"
